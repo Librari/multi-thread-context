@@ -32,6 +32,12 @@ public class MtContextThreadLocal<T> extends InheritableThreadLocal<T> {
         return parentValue;
     }
 
+    protected void beforeExecute() {
+    }
+
+    protected void afterExecute() {
+    }
+
     @Override
     public final T get() {
         T value = super.get();
@@ -105,7 +111,7 @@ public class MtContextThreadLocal<T> extends InheritableThreadLocal<T> {
                 threadLocal.superRemove();
             }
         }
-        setMtContexts(copied);
+        setMtContexts(copied, true);
         return backup;
     }
 
@@ -120,14 +126,19 @@ public class MtContextThreadLocal<T> extends InheritableThreadLocal<T> {
                 threadLocal.superRemove();
             }
         }
-        setMtContexts(backup);
+        setMtContexts(backup, false);
     }
 
-    static void setMtContexts(Map<MtContextThreadLocal<?>, Object> set) {
+    static void setMtContexts(Map<MtContextThreadLocal<?>, Object> set, boolean isStore) {
         for (Map.Entry<MtContextThreadLocal<?>, Object> entry : set.entrySet()) {
             @SuppressWarnings("unchecked")
             MtContextThreadLocal<Object> threadLocal = (MtContextThreadLocal<Object>) entry.getKey();
             threadLocal.set(entry.getValue());
+            if (isStore) {
+                threadLocal.beforeExecute();
+            } else {
+                threadLocal.afterExecute();
+            }
         }
     }
 }
